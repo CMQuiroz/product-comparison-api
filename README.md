@@ -37,16 +37,23 @@ This structure helps keep responsibilities separated and improves maintainabilit
 ## Endpoints
 
 ### Get all products
-Returns all available products  
-`GET /products`
+**GET /products**
+
+Returns all available products.
+
+---
 
 ### Get products by IDs
-Returns products filtered by IDs  
-`GET /products?ids=1,2`
+**GET /products?ids=1,2**
+
+Returns products filtered by IDs.
+
+---
 
 ### Compare products
-Compares products by price, rating, and specifications  
-`POST /products/compare`
+**POST /products/compare**
+
+Compares products by price, rating, and specifications.
 
 #### Request body
 ```json
@@ -54,44 +61,13 @@ Compares products by price, rating, and specifications
   "productIds": [1, 2]
 }
 
-{
-  "products": [
-    {
-      "id": 1,
-      "name": "iPhone 13",
-      "description": "Apple smartphone",
-      "image": "https://example.com/iphone.jpg",
-      "price": 1200.0,
-      "rating": 4.5,
-      "specs": {
-        "ram": "4GB",
-        "storage": "128GB",
-        "screen": "6.1"
-      }
-    },
-    {
-      "id": 2,
-      "name": "Samsung S22",
-      "description": "Samsung flagship",
-      "image": "https://example.com/samsung.jpg",
-      "price": 1000.0,
-      "rating": 4.3,
-      "specs": {
-        "ram": "8GB",
-        "storage": "256GB",
-        "screen": "6.1"
-      }
-    }
-  ],
-  "comparison": {
-    "priceDifference": 200.0,
-    "ratingDifference": 0.2,
-    "specDifferences": {
-      "ram": ["4GB", "8GB"],
-      "storage": ["128GB", "256GB"]
-    }
-  }
-}
+curl -X POST http://localhost:8080/products/compare \
+-H "Content-Type: application/json" \
+-d '{"productIds":[1,2]}'
+
+Example (curl)
+
+Response example
 
 {
   "products": [
@@ -138,17 +114,19 @@ The API uses a global exception handler to return consistent error responses.
 
 Example error response
 
-Logging
+Error Handling
 
-Logging is implemented using SLF4J across the main application layers:
+The API uses a global exception handler to return consistent error responses.
 
-Controller layer for incoming requests
+Example error response
 
-Service layer for business flow and validations
-
-Exception handler for controlled and unexpected errors
-
-This improves traceability and observability.
+{
+  "timestamp": "2026-03-19T18:30:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "At least two product ids are required",
+  "path": "/products/compare"
+}
 
 Logging
 
@@ -168,39 +146,11 @@ Unit tests were added for the service layer using JUnit 5 and Mockito.
 
 Covered scenarios
 
-successful product comparison
+Successful product comparison
 
-invalid comparison request with fewer than two product IDs
+Invalid comparison request with fewer than two product IDs
 
-comparison request with insufficient products found
-
-This helps validate the core business logic in isolation.
-
-How to Run
-
-Clone the repository
-
-Open the project in IntelliJ IDEA
-
-Make sure JDK 21 is configured
-
-Run Application.java
-
-The application will start on:
-
-http://localhost:8080
-
-Testing
-
-Unit tests were added for the service layer using JUnit 5 and Mockito.
-
-Covered scenarios
-
-successful product comparison
-
-invalid comparison request with fewer than two product IDs
-
-comparison request with insufficient products found
+Comparison request with insufficient products found
 
 This helps validate the core business logic in isolation.
 
@@ -214,30 +164,17 @@ Make sure JDK 21 is configured
 
 Run Application.java
 
-The application will start on:
-
-http://localhost:8080
+Base URL: http://localhost:8080
 
 How to Test
 
 The API can be tested using Postman.
 
-Valid compare request
-
+Valid request
 {
   "productIds": [1, 2]
 }
-
-{
-  "productIds": [1, 2]
-}
-
-Invalid compare request
-
-{
-  "productIds": [1]
-}
-
+Invalid request
 {
   "productIds": [1]
 }
@@ -253,3 +190,25 @@ A global exception handler was added to standardize API error responses
 Logging was added to improve traceability and debugging
 
 Unit tests were added to validate the service layer independently
+
+Assumptions
+
+The comparison is currently limited to two products
+
+Product data is mocked or stored in memory
+
+Specifications are compared based on matching keys
+
+Possible Improvements
+
+Add integration tests for controller endpoints
+
+Add Swagger / OpenAPI documentation
+
+Persist data in a real database such as PostgreSQL
+
+Support comparison of more than two products
+
+Add pagination and filtering for larger product catalogs
+
+Add authentication and authorization
