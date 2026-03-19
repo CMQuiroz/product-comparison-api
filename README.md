@@ -2,7 +2,7 @@
 
 A RESTful backend API built with Spring Boot to support a product comparison feature.
 
-The purpose of this project is to provide clear and efficient endpoints for retrieving product data and comparing items based on key attributes such as name, image URL, description, price, rating, and specifications.
+The goal of this project is to provide clear and efficient endpoints for retrieving product data and comparing items based on key attributes such as name, image URL, description, price, rating, and specifications.
 
 The implementation keeps the solution simple, readable, and easy to run locally while following solid backend design practices.
 
@@ -28,17 +28,6 @@ The current implementation uses an **in-memory repository with seeded sample dat
 - Maven
 - JUnit 5
 - Mockito
-
-### Included Dependencies
-
-The project also includes:
-
-- Spring Data JPA
-- H2 Database
-- Jakarta Validation
-- Hibernate Validator
-
-> Note: although JPA and H2 are included as dependencies, the current product catalog is served from an in-memory repository rather than a persistent database.
 
 ---
 
@@ -80,24 +69,24 @@ Client
 ### Design Approach
 
 - **Controller layer**
-    - Exposes REST endpoints
-    - Handles request mapping and input reception
+  - Exposes REST endpoints
+  - Handles request mapping and input reception
 
 - **Service layer**
-    - Contains the comparison logic
-    - Validates incoming requests
-    - Builds the response payload
+  - Contains the comparison logic
+  - Validates incoming requests
+  - Builds the response payload
 
 - **Repository layer**
-    - Provides access to product data
-    - Uses a seeded in-memory list to simulate persistence
+  - Provides access to product data
+  - Uses a seeded in-memory list to simulate persistence
 
 - **DTO layer**
-    - Defines request and response contracts
+  - Defines request and response contracts
 
 - **Global exception handling**
-    - Centralizes API error responses
-    - Keeps controllers cleaner and responses more consistent
+  - Centralizes API error responses
+  - Keeps controllers cleaner and responses more consistent
 
 ---
 
@@ -256,6 +245,26 @@ http://localhost:8080
 
 ---
 
+## Testing
+
+Run the test suite with:
+
+```bash
+mvn test
+```
+
+### Current Coverage
+
+The service-layer unit tests cover:
+
+- successful product comparison
+- validation when fewer than two IDs are provided
+- validation when not enough products are found
+
+The tests use **Mockito** to isolate the service logic from the repository.
+
+---
+
 ## Error Handling
 
 The project includes centralized exception handling for invalid input and unexpected runtime errors.
@@ -278,26 +287,6 @@ The project includes centralized exception handling for invalid input and unexpe
   "path": "/products/compare"
 }
 ```
-
----
-
-## Testing
-
-Run the test suite with:
-
-```bash
-mvn test
-```
-
-### Current Coverage
-
-The service-layer unit tests cover:
-
-- successful product comparison
-- validation when fewer than two IDs are provided
-- validation when not enough products are found
-
-The tests use **Mockito** to isolate the service logic from the repository.
 
 ---
 
@@ -337,7 +326,7 @@ This project intentionally keeps the implementation compact. Current limitations
 
 If this project were extended beyond the scope of the exercise, the next logical steps would be:
 
-- replace the in-memory repository with a real persistence layer using JPA and H2/PostgreSQL
+- replace the in-memory repository with a real persistence layer
 - add Swagger/OpenAPI documentation
 - support true multi-product comparison
 - add integration tests for controller endpoints
