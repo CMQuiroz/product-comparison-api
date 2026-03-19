@@ -1,74 +1,161 @@
 # Product Comparison API
 
-## Overview
-This project is a RESTful API built with Spring Boot that allows retrieving and comparing products based on different attributes such as price, rating, and specifications.
+A RESTful backend API built with Spring Boot to support a product comparison feature.
 
-The main goal is to provide a structured comparison between products using clean architecture and backend best practices.
+The purpose of this project is to provide clear and efficient endpoints for retrieving product data and comparing items based on key attributes such as name, image URL, description, price, rating, and specifications.
+
+The implementation keeps the solution simple, readable, and easy to run locally while following solid backend design practices.
+
+---
+
+## Overview
+
+This API allows clients to:
+
+- retrieve the full product catalog
+- retrieve a subset of products by ID
+- compare products and return both the selected product data and a structured comparison summary
+
+The current implementation uses an **in-memory repository with seeded sample data**, which keeps the project lightweight and easy to evaluate without requiring external infrastructure.
 
 ---
 
 ## Tech Stack
 
 - Java 21
-- Spring Boot 3
+- Spring Boot 3.2.5
 - Spring Web
-- Spring Data JPA
-- H2 Database
 - Maven
 - JUnit 5
 - Mockito
 
----
+### Included Dependencies
 
-## Architecture
+The project also includes:
 
-The application follows a layered architecture:
+- Spring Data JPA
+- H2 Database
+- Jakarta Validation
+- Hibernate Validator
 
-- **Controller**: Handles HTTP requests and responses
-- **Service**: Contains the business logic
-- **Repository**: Provides access to product data
-- **DTOs**: Define request and response contracts
-- **Exception Handler**: Centralizes API error handling
-
-This structure helps keep responsibilities separated and improves maintainability and scalability.
+> Note: although JPA and H2 are included as dependencies, the current product catalog is served from an in-memory repository rather than a persistent database.
 
 ---
 
-## Endpoints
+## API Design
 
-### Get all products
-**GET /products**
+The API follows a simple layered design to keep responsibilities clearly separated.
 
-Returns all available products.
+### Architecture Diagram
+
+```text
+Client
+  │
+  │ HTTP Request
+  ▼
+ProductController
+  │
+  │ delegates business logic
+  ▼
+ProductService
+  │
+  │ retrieves product data
+  ▼
+ProductRepository
+  │
+  ▼
+In-memory product catalog
+
+ProductService
+  │
+  │ builds comparison result
+  ▼
+Comparison Response DTO
+  │
+  │ HTTP Response
+  ▼
+Client
+```
+
+### Design Approach
+
+- **Controller layer**
+    - Exposes REST endpoints
+    - Handles request mapping and input reception
+
+- **Service layer**
+    - Contains the comparison logic
+    - Validates incoming requests
+    - Builds the response payload
+
+- **Repository layer**
+    - Provides access to product data
+    - Uses a seeded in-memory list to simulate persistence
+
+- **DTO layer**
+    - Defines request and response contracts
+
+- **Global exception handling**
+    - Centralizes API error responses
+    - Keeps controllers cleaner and responses more consistent
 
 ---
 
-### Get products by IDs
-**GET /products?ids=1,2**
+## Main Endpoints
 
-Returns products filtered by IDs.
+### 1. Get all products
+
+**GET** `/products`
+
+Returns the full list of available products.
+
+#### Example request
+
+```bash
+curl http://localhost:8080/products
+```
 
 ---
 
-### Compare products
-**POST /products/compare**
+### 2. Get products by IDs
 
-Compares products by price, rating, and specifications.
+**GET** `/products?ids=1,2`
+
+Returns only the products that match the provided IDs.
+
+#### Example request
+
+```bash
+curl "http://localhost:8080/products?ids=1,2"
+```
+
+---
+
+### 3. Compare products
+
+**POST** `/products/compare`
+
+Accepts a list of product IDs and returns the selected products along with a structured comparison result.
 
 #### Request body
+
 ```json
 {
   "productIds": [1, 2]
 }
+```
 
+#### Example request
+
+```bash
 curl -X POST http://localhost:8080/products/compare \
--H "Content-Type: application/json" \
--d '{"productIds":[1,2]}'
+  -H "Content-Type: application/json" \
+  -d '{"productIds":[1,2]}'
+```
 
-Example (curl)
+#### Example response
 
-Response example
-
+```json
 {
   "products": [
     {
@@ -107,108 +194,152 @@ Response example
     }
   }
 }
+```
 
-Error Handling
+---
 
-The API uses a global exception handler to return consistent error responses.
+## Comparison Logic
 
-Example error response
+The comparison service currently computes:
 
-Error Handling
+- **priceDifference**  
+  Absolute difference between the prices of the first two matched products
 
-The API uses a global exception handler to return consistent error responses.
+- **ratingDifference**  
+  Absolute difference between the ratings of the first two matched products
 
-Example error response
+- **specDifferences**  
+  A dynamic map containing only the specification keys whose values differ between the first two matched products
 
+### Implementation Note
+
+The request accepts a list of product IDs, but the current comparison logic calculates the result using the **first two matched products**.
+
+For predictable behavior, the intended use is to send exactly **two product IDs** per comparison request.
+
+---
+
+## Seed Data
+
+The application starts with a small in-memory product catalog:
+
+| ID | Product      | Price  | Rating |
+|----|--------------|--------|--------|
+| 1  | iPhone 13    | 1200.0 | 4.5    |
+| 2  | Samsung S22  | 1000.0 | 4.3    |
+| 3  | Xiaomi Mi 11 | 800.0  | 4.2    |
+
+This keeps the project self-contained and easy to review.
+
+---
+
+## Setup Instructions
+
+### Prerequisites
+
+- Java 21
+- Maven
+
+### Run the application
+
+From the project root, run:
+
+```bash
+mvn spring-boot:run
+```
+
+The API will be available at:
+
+```text
+http://localhost:8080
+```
+
+---
+
+## Error Handling
+
+The project includes centralized exception handling for invalid input and unexpected runtime errors.
+
+### Examples of handled scenarios
+
+- empty or missing product ID list
+- fewer than two product IDs for comparison
+- insufficient products found for a comparison request
+- unexpected internal server errors
+
+### Example error response
+
+```json
 {
-  "timestamp": "2026-03-19T18:30:00",
+  "timestamp": "2026-03-19T12:00:00",
   "status": 400,
   "error": "Bad Request",
   "message": "At least two product ids are required",
   "path": "/products/compare"
 }
+```
 
-Logging
+---
 
-Logging is implemented using SLF4J across the main application layers:
+## Testing
 
-Controller layer for incoming requests
+Run the test suite with:
 
-Service layer for business flow and validations
+```bash
+mvn test
+```
 
-Exception handler for controlled and unexpected errors
+### Current Coverage
 
-This improves traceability and observability.
+The service-layer unit tests cover:
 
-Testing
+- successful product comparison
+- validation when fewer than two IDs are provided
+- validation when not enough products are found
 
-Unit tests were added for the service layer using JUnit 5 and Mockito.
+The tests use **Mockito** to isolate the service logic from the repository.
 
-Covered scenarios
+---
 
-Successful product comparison
+## Key Architectural Decisions
 
-Invalid comparison request with fewer than two product IDs
+### 1. In-memory repository instead of a real database
 
-Comparison request with insufficient products found
+The exercise explicitly allows simulated persistence. Using an in-memory repository keeps the project focused on API behavior, business logic, and error handling rather than database setup.
 
-This helps validate the core business logic in isolation.
+### 2. Layered structure
 
-How to Run
+Separating controller, service, and repository responsibilities improves readability and makes the code easier to maintain and extend.
 
-Clone the repository
+### 3. Centralized exception handling
 
-Open the project in IntelliJ IDEA
+A global exception handler provides a consistent error format across the API and prevents controllers from being cluttered with repetitive error-handling logic.
 
-Make sure JDK 21 is configured
+### 4. Dynamic specification comparison
 
-Run Application.java
+Instead of hardcoding every comparable attribute, product specifications are stored in a map and compared dynamically. This makes the comparison logic more flexible for fields such as RAM, storage, or screen size.
 
-Base URL: http://localhost:8080
+---
 
-How to Test
+## Limitations
 
-The API can be tested using Postman.
+This project intentionally keeps the implementation compact. Current limitations include:
 
-Valid request
-{
-  "productIds": [1, 2]
-}
-Invalid request
-{
-  "productIds": [1]
-}
+- product data is not persisted in a real database
+- the comparison logic is effectively pairwise even though the request accepts a list
+- there is no pagination, sorting, or advanced filtering
+- there is no OpenAPI or Swagger documentation yet
+- there is no authentication or authorization layer
 
-Design Decisions
+---
 
-DTOs were used to separate API contracts from internal models
+## Possible Improvements
 
-A layered architecture was used to keep responsibilities separated
+If this project were extended beyond the scope of the exercise, the next logical steps would be:
 
-A global exception handler was added to standardize API error responses
-
-Logging was added to improve traceability and debugging
-
-Unit tests were added to validate the service layer independently
-
-Assumptions
-
-The comparison is currently limited to two products
-
-Product data is mocked or stored in memory
-
-Specifications are compared based on matching keys
-
-Possible Improvements
-
-Add integration tests for controller endpoints
-
-Add Swagger / OpenAPI documentation
-
-Persist data in a real database such as PostgreSQL
-
-Support comparison of more than two products
-
-Add pagination and filtering for larger product catalogs
-
-Add authentication and authorization
+- replace the in-memory repository with a real persistence layer using JPA and H2/PostgreSQL
+- add Swagger/OpenAPI documentation
+- support true multi-product comparison
+- add integration tests for controller endpoints
+- containerize the application with Docker
+- add CI validation for build and test execution
